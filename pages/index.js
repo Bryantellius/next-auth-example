@@ -1,10 +1,11 @@
+import dynamic from "next/dynamic";
 import Layout from "../components/layout";
 import { useState, useEffect } from "react";
 import io from "socket.io-client";
-import ReactAce from "react-ace-editor";
 
 let socket;
-let ace;
+
+const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
 
 export default function Page() {
   const [isConnected, setIsConnected] = useState(false);
@@ -52,16 +53,7 @@ export default function Page() {
           }}
         ></sup>
       </p>
-      <ReactAce
-        mode="javascript"
-        theme="eclipse"
-        setReadOnly={false}
-        onChange={onChange}
-        style={{ width: "100%", minHeight: "300px" }}
-        ref={(instance) => {
-          ace = instance;
-        }}
-      />
+      <Editor value={code} onChange={onChange} />
     </Layout>
   );
 }
