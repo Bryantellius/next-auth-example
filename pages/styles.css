@@ -1,3 +1,9 @@
+@import url(../node_modules/bootstrap/dist/css/bootstrap.min.css);
+
+* {
+  box-sizing: border-box;
+}
+
 html {
   font-size: 20px;
 }
@@ -34,12 +40,14 @@ hr {
   border: 1px solid #ddd;
 }
 
-iframe {
-  background: #ccc;
-  border: 1px solid #ccc;
-  height: 10rem;
+.console {
+  background: #000;
+  border: 1px solid #000;
   width: 100%;
+  padding: 0.5rem;
   border-radius: 0.5rem;
-  min-width: 100%;
-  min-height: 400px;
+  width: 100%;
+  min-height: 200px;
+  height: fit-content;
+  white-space: pre-wrap;
 }
