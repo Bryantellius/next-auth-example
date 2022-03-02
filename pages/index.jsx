@@ -1,114 +1,111 @@
-import dynamic from "next/dynamic";
 import Layout from "../components/layout";
-import { useState, useEffect } from "react";
-import io from "socket.io-client";
-import Console from "../components/Console";
+import { useState } from "react";
+import { useRouter } from "next/router";
+import id_16 from "id-16";
 
-let socket;
-
-const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
-
-export default function Page() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [code, setCode] = useState("console.log('Hello World')");
-  const [output, setOutput] = useState({ stdout: "Hello World" });
+export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false);
   const [language, setLanguage] = useState("javascript");
+  const [roomId, setRoomId] = useState("");
 
-  const onChange = (updatedCode) => {
-    setCode(updatedCode);
-    socket.emit("update-code", updatedCode);
+  const router = useRouter();
+  const id_generator = id_16.generator(6);
+
+  const createRoom = () => {
+    router.push(
+      `/editor?roomId=${id_generator()}&language=${language}`,
+      undefined,
+      { shallow: true }
+    );
   };
 
-  const initializeSocket = async () => {
-    await fetch("/api/socket");
-    socket = io();
-
-    socket.on("connect", () => {
-      console.log("STATUS: connected");
-      setIsConnected(true);
-    });
-
-    socket.on("update-code", (value) => setCode(value));
-  };
-
-  const onRun = async () => {
-    let body = {
-      name: "main",
-      content: code,
-      language: "javascript",
-    };
-
-    let res = await fetch("/api/code/run", {
+  const joinRoom = async () => {
+    let res = await fetch("/api/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ roomId }),
     });
     let data = await res.json();
-    console.log(data);
-    setOutput(data);
+    if (!data.connect) alert(data.msg);
   };
-
-  useEffect(() => {
-    initializeSocket();
-  }, []);
 
   return (
     <Layout>
-      <h1>BB Collab (NextAuth.js x Socket.io)</h1>
-      <p>
-        This is an example site to demonstrate how to use{" "}
-        <a href={`https://next-auth.js.org`}>NextAuth.js</a> for authentication
-        and <a href="https://socket.io">Socket.io</a> for real-time
-        communication.
-      </p>
-      <p>
-        Socket Status:{" "}
-        <sup
-          style={{
-            display: "inline-block",
-            backgroundColor: isConnected ? "green" : "red",
-            width: "10px",
-            height: "10px",
-            borderRadius: "9999px",
-          }}
-        ></sup>
-      </p>
-      <div className="d-flex justify-content-between align-items-center my-1">
-        <select
-          name="language"
-          id="language"
-          className="form-control w-auto"
-          onChange={(e) => setLanguage(e.target.value)}
-        >
-          <option value="javascript">JS</option>
-          <option value="typescript">TS</option>
-          <option value="csharp">C#</option>
-          <option value="java">Java</option>
-          <option value="python">Python</option>
-        </select>
-        <span>{language.toUpperCase()}</span>
-        <div className="btn-group">
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setCode("console.log('Hello World')");
-              setOutput("Hello World");
-            }}
-          >
-            Reset
-          </button>
-          <button className="btn btn-success" onClick={onRun}>
-            Run
-          </button>
+      <div className="container text-center">
+        <h1>Welcome to Collab! 👋</h1>
+        <p>
+          This is a place where you can create a coding room and dev out with
+          another programmer!
+        </p>
+        <hr />
+        <h2>What would you like to do?</h2>
+        <div className="row my-3">
+          <div className="col-sm-6">
+            <div className="card shadow card-dark">
+              <div className="card-body">
+                <h3 className="h3 mb-3">Create a room</h3>
+                <label htmlFor="languageSelect">
+                  Select a programming language:
+                </label>
+                <div className="input-group my-3">
+                  <select
+                    aria-label="Select a programming language"
+                    className="form-control custom-select"
+                    id="languageSelect"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                  >
+                    <option value="javascript">JS</option>
+                    <option value="typescript">TS</option>
+                    <option value="csharp">C#</option>
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                  </select>
+                  <div className="input-group-append">
+                    <button className="btn btn-success" onClick={createRoom}>
+                      Create
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-sm-6">
+            <div className="card shadow card-dark">
+              <div className="card-body">
+                <h3 className="h3 mb-3">Join a room</h3>
+                <label htmlFor="roomId">
+                  What's the room ID you're looking to join?
+                </label>
+                <div className="input-group my-3">
+                  <input
+                    className="form-control"
+                    type="text"
+                    name="roomId"
+                    id="roomId"
+                    max-length={6}
+                    min-length={6}
+                    required
+                    aria-label="Room Id to Join"
+                    placeholder="aBcDef567!"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                  />
+                  <div className="input-group-append">
+                    <button
+                      className="btn btn-primary"
+                      disabled={roomId.length > 6 || roomId.length < 6}
+                      onClick={joinRoom}
+                    >
+                      Join
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <Editor
-        value={code}
-        language={language}
-        onChange={onChange}
-        style={{ width: "100%", minHeight: "300px" }}
-      />
-      <Console value={output.stderr || output.stdout} />
     </Layout>
   );
 }
