@@ -55,6 +55,11 @@ hr {
   height: fit-content;
 }
 
+.max-w-600 {
+  max-width: 600px;
+  width: 100%;
+}
+
 .console {
   background: #000;
   border: 1px solid #000;
