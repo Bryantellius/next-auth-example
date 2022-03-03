@@ -5,7 +5,6 @@ import id_16 from "id-16";
 import { getAbbr } from "../utils/code";
 
 export default function Home() {
-  const [isLoaded, setIsLoaded] = useState(false);
   const [language, setLanguage] = useState("javascript");
   const [roomId, setRoomId] = useState("");
 
@@ -82,7 +81,7 @@ export default function Home() {
                     min-length={9}
                     required
                     aria-label="Room Id to Join"
-                    placeholder="aBcDef567!"
+                    placeholder="aBcDef567"
                     value={roomId}
                     onChange={(e) => setRoomId(e.target.value)}
                   />

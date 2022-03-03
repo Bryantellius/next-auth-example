@@ -71,7 +71,7 @@
 .buttonPrimary {
   background-color: #346df1;
   border-color: #346df1;
-  color: #fff;
+  color: #fff !important;
   text-decoration: none;
   padding: .7rem 1.4rem;
 }
@@ -84,6 +84,7 @@
   margin-bottom: 2rem;
   padding: 0;
   list-style: none;
+  text-align: center;
 }
 
 .navItem {

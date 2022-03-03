@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import Layout from "../../components/layout";
+import Loader from "../../components/Loader";
 import { useState, useEffect } from "react";
 import io from "socket.io-client";
 import Console from "../../components/Console";
@@ -43,6 +44,8 @@ export default function Page() {
       socket.on("update-code", (value) => setCode(value));
       socket.on("code-run", onRun);
     });
+
+    setIsLoaded(true);
   };
 
   const onRun = async (input) => {
@@ -71,6 +74,14 @@ export default function Page() {
   useEffect(() => {
     if (pid) initializeSocket();
   }, [pid]);
+
+  if (!isLoaded) {
+    return (
+      <div className="full-screen">
+        <Loader size={50} />
+      </div>
+    );
+  }
 
   return (
     <Layout>
