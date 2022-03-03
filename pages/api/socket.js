@@ -12,19 +12,10 @@ const SocketHandler = (req, res) => {
       console.log("socket established " + new Date().toString());
 
       socket.on("join-room", (data) => {
-        console.log("USER JOINED", data);
-        const { roomId, language, user } = data;
+        console.log("User is joining...", data);
+        const { roomId, user } = data;
 
         socket.join(roomId);
-
-        if (!res.rooms) {
-          res.rooms = {};
-          res.rooms[roomId] = {};
-        }
-
-        if (!res.rooms[roomId].language) res.rooms[roomId].language = language;
-
-        console.log(res.rooms);
 
         socket.to(roomId).emit("new-user-connect", data);
 
@@ -33,12 +24,20 @@ const SocketHandler = (req, res) => {
         });
 
         socket.on("code-change", (code) => {
-          res.rooms[roomId].code = code;
           socket.to(roomId).emit("update-code", code);
+        });
+
+        socket.on("run-code", (data) => {
+          socket.to(roomId).emit("code-run", data);
+        });
+
+        socket.on("reset-code", () => {
+          socket.to(roomId).emit("code-reset");
         });
       });
     });
   }
+
   res.end();
 };
 

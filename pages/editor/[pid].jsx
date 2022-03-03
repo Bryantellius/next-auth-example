@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import io from "socket.io-client";
 import Console from "../../components/Console";
 import { useRouter } from "next/router";
+import { parsePid } from "../../utils/code";
 
 let socket;
 
@@ -12,11 +13,14 @@ const Editor = dynamic(() => import("../../components/Editor"), { ssr: false });
 export default function Page() {
   const router = useRouter();
 
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [code, setCode] = useState("");
   const [output, setOutput] = useState({ stdout: "" });
+  const [language, setLanguage] = useState(null);
+  const [roomId, setRoomId] = useState(null);
 
-  const { roomId, language } = router.query;
+  const { pid = "" } = router.query;
 
   const onChange = (updatedCode) => {
     setCode(updatedCode);
@@ -24,22 +28,28 @@ export default function Page() {
   };
 
   const initializeSocket = async () => {
+    const [language, roomId] = parsePid(pid);
+
+    setLanguage(language);
+    setRoomId(roomId);
+
     await fetch("/api/socket");
     socket = io();
 
     socket.on("connect", () => {
       console.log("STATUS: connected");
-      socket.emit("join-room", { roomId, language, user: { name: "Ben" } });
+      socket.emit("join-room", { pid, user: { name: "Ben" } });
       setIsConnected(true);
       socket.on("update-code", (value) => setCode(value));
+      socket.on("code-run", onRun);
     });
   };
 
-  const onRun = async () => {
+  const onRun = async (input) => {
     let body = {
-      name: "main",
-      content: code,
-      language: language,
+      name: "main" || input.fromName,
+      content: code || input.fromContent,
+      language: language || input.fromLanguage,
     };
 
     let res = await fetch("/api/code/run", {
@@ -52,15 +62,21 @@ export default function Page() {
     setOutput(data);
   };
 
+  const onReset = () => {
+    setCode("");
+    setOutput({ stdout: "" });
+    socket.emit("code-change", "");
+  };
+
   useEffect(() => {
-    initializeSocket();
-  }, []);
+    if (pid) initializeSocket();
+  }, [pid]);
 
   return (
     <Layout>
       <div className="container">
         <h1>
-          {language} room {roomId}
+          {language} room {pid}
         </h1>
         <p>
           Socket Status:{" "}
@@ -76,16 +92,20 @@ export default function Page() {
         </p>
         <div className="d-flex justify-content-end align-items-center my-1">
           <div className="btn-group">
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setCode("console.log('Hello World')");
-                setOutput({ stdout: "Hello World" });
-              }}
-            >
+            <button className="btn btn-secondary" onClick={onReset}>
               Reset
             </button>
-            <button className="btn btn-success" onClick={onRun}>
+            <button
+              className="btn btn-success"
+              onClick={() => {
+                onRun();
+                socket.emit("run-code", {
+                  fromName: "main",
+                  fromContent: code,
+                  fromLanguage: language,
+                });
+              }}
+            >
               Run
             </button>
           </div>

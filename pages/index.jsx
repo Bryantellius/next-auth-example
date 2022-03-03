@@ -2,6 +2,7 @@ import Layout from "../components/layout";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import id_16 from "id-16";
+import { getAbbr } from "../utils/code";
 
 export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -12,21 +13,15 @@ export default function Home() {
   const id_generator = id_16.generator(6);
 
   const createRoom = () => {
-    router.push(
-      `/editor?roomId=${id_generator()}&language=${language}`,
-      undefined,
-      { shallow: true }
-    );
+    router.push(`/editor/${getAbbr(language)}-${id_generator()}`, undefined, {
+      shallow: true,
+    });
   };
 
   const joinRoom = async () => {
-    let res = await fetch("/api/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomId }),
+    router.push(`/editor/${roomId}`, undefined, {
+      shallow: true,
     });
-    let data = await res.json();
-    if (!data.connect) alert(data.msg);
   };
 
   return (
@@ -83,8 +78,8 @@ export default function Home() {
                     type="text"
                     name="roomId"
                     id="roomId"
-                    max-length={6}
-                    min-length={6}
+                    max-length={9}
+                    min-length={9}
                     required
                     aria-label="Room Id to Join"
                     placeholder="aBcDef567!"
@@ -94,7 +89,7 @@ export default function Home() {
                   <div className="input-group-append">
                     <button
                       className="btn btn-primary"
-                      disabled={roomId.length > 6 || roomId.length < 6}
+                      disabled={roomId.length > 9 || roomId.length < 9}
                       onClick={joinRoom}
                     >
                       Join
